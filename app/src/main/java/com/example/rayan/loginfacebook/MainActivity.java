@@ -1,8 +1,8 @@
-package com.example.rayanne.loginfacebook;
+package com.example.rayan.loginfacebook;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeControls(){
         callbackManager = CallbackManager.Factory.create();
-        login_button = findViewById(R.id.login_button);
+        login_button = (LoginButton)findViewById(R.id.login_button);
         login_button.setReadPermissions("email", "public_profile");
     }
 
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
                         AccessToken accessToken = loginResult.getAccessToken();
-                        Toast.makeText(getApplicationContext(), "Aguarde.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Entrando...", Toast.LENGTH_SHORT).show();
                         get_profile(accessToken);
                     }
 
@@ -50,8 +50,10 @@ public class MainActivity extends AppCompatActivity {
                     public void onCancel() {
                     }
 
+
                     @Override
                     public void onError(FacebookException error) {
+
                     }
                 });
     }
@@ -72,16 +74,11 @@ public class MainActivity extends AppCompatActivity {
                             String userID = object.getString("id");
                             profileIntent.putExtra("id", userID);
                             String firstname = "";
-                            String lastname = "";
                             String email = "";
 
                             if (object.has("first_name")) {
                                 firstname = object.getString("first_name");
                                 profileIntent.putExtra("name", firstname);
-                            }
-                            if (object.has("last_name")) {
-                                lastname = object.getString("last_name");
-                                profileIntent.putExtra("lastname", lastname);
                             }
                             if (object.has("email")){
                                 email = object.getString("email");
@@ -94,11 +91,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         Bundle parameters = new Bundle();
-        parameters.putString("fields", "id, first_name, last_name, email");
+        parameters.putString("fields", "id, name, email");
         request.setParameters(parameters);
         request.executeAsync();
 
     }
+
 }
-
-
