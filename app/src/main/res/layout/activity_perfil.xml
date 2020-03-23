@@ -15,6 +15,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
 
+
     <TextView
         android:id="@+id/txtNome"
         android:layout_width="wrap_content"
@@ -57,5 +58,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:ignore="MissingConstraints" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="MENU"
+        tools:layout_editor_absoluteX="161dp"
+        tools:layout_editor_absoluteY="407dp" />
 
 </android.support.constraint.ConstraintLayout>

@@ -12,15 +12,19 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity {
+public class PagLogin extends AppCompatActivity {
+
     LoginButton login_button;
     CallbackManager callbackManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,14 +40,33 @@ public class MainActivity extends AppCompatActivity {
         login_button.setReadPermissions("email", "public_profile");
     }
 
+
     private void loginWithFB() {
         login_button.registerCallback(callbackManager, new
                 FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
-                        AccessToken accessToken = loginResult.getAccessToken();
-                        Toast.makeText(getApplicationContext(), "Aguarde.", Toast.LENGTH_SHORT).show();
-                        get_profile(accessToken);
+                        if (Profile.getCurrentProfile() != null) {
+                            AccessToken accessToken = loginResult.getAccessToken();
+                            Toast.makeText(getApplicationContext(), "Aguarde.", Toast.LENGTH_SHORT).show();
+                            get_profile(accessToken);
+                            //Login OK, session = true
+                            SharedPref.save(getApplicationContext(), "session", "true");
+                            Intent intent = new Intent(PagLogin.this, PagMenu.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            ProfileTracker profileTracker = new ProfileTracker() {
+                                @Override
+                                protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+                                    stopTracking();
+                                    Profile.setCurrentProfile(currentProfile);
+                                    String firstName = currentProfile.getName();
+                                    Toast.makeText(getApplicationContext(), "Bem-vindo(a), " + firstName + "!", Toast.LENGTH_LONG).show();
+                                }
+                            };
+                            profileTracker.startTracking();
+                        }
                     }
 
                     @Override
@@ -62,32 +85,31 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
+
     private void get_profile(AccessToken accessToken){
         GraphRequest request = GraphRequest.newMeRequest(
                 accessToken, new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
-                        Intent profileIntent = new Intent(MainActivity.this, Perfil.class);
+                        //Intent profileIntent = new Intent(MainActivity.this, Perfil.class);
                         try {
                             String userID = object.getString("id");
-                            profileIntent.putExtra("id", userID);
-                            String firstname = "";
-                            String lastname = "";
-                            String email = "";
+                            SharedPref.saveUserId(getApplicationContext(), "user id", userID);
+                            String firstname;
+                            String lastname;
+                            String email;
 
-                            if (object.has("first_name")) {
+                            if (object.has("first_name") && object.has("last_name")) {
                                 firstname = object.getString("first_name");
-                                profileIntent.putExtra("name", firstname);
-                            }
-                            if (object.has("last_name")) {
                                 lastname = object.getString("last_name");
-                                profileIntent.putExtra("lastname", lastname);
+                                SharedPref.saveUserName(getApplicationContext(), "user name", firstname + " " + lastname);
                             }
                             if (object.has("email")){
                                 email = object.getString("email");
-                                profileIntent.putExtra("email", email);
+                                SharedPref.saveUserEmail(getApplicationContext(), "user email", email);
                             }
-                            startActivity(profileIntent);
+                            //startActivity(profileIntent);
+
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -97,7 +119,12 @@ public class MainActivity extends AppCompatActivity {
         parameters.putString("fields", "id, first_name, last_name, email");
         request.setParameters(parameters);
         request.executeAsync();
+    }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 }
 
